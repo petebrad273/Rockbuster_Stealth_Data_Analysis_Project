@@ -1,0 +1,27 @@
+/* Get top 5 customers within top 10 cities by total amount paid within top 10 countries by customer count */
+
+SELECT payment.customer_id,
+       first_name || ' ' || last_name AS customer_name,
+       top_10_countries.country,
+       city,
+       SUM(amount) AS total_amount_paid
+FROM customer
+INNER JOIN address ON customer.address_id = address.address_id
+INNER JOIN city ON address.city_id = city.city_id
+INNER JOIN country ON city.country_id = country.country_id
+INNER JOIN payment ON customer.customer_id = payment.customer_id
+INNER JOIN
+  (SELECT country.country_id,
+          country,
+          COUNT(customer_id) AS total_customers
+  FROM customer
+  INNER JOIN address ON customer.address_id = address.address_id
+  INNER JOIN city ON address.city_id = city.city_id
+  INNER JOIN country ON city.country_id = country.country_id
+  GROUP BY country.country_id, country
+  ORDER BY total_customers DESC
+  LIMIT 10) AS top_10_countries
+ON country.country = top_10_countries.country
+GROUP BY payment.customer_id, first_name, last_name, top_10_countries.country, city
+ORDER BY total_amount_paid DESC
+LIMIT 5;
